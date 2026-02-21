@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sébastien - Générateur de CVNU</title>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+    <style>
+        :root {
+            --orange-road: #f39c12;
+            --dark-grey: #2c3e50;
+            --bg-color: #ecf0f1;
+        }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg-color); color: var(--dark-grey); margin: 0; padding: 20px; }
+        .container { max-width: 800px; margin: auto; background: white; padding: 30px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+        h1 { text-align: center; color: var(--orange-road); text-transform: uppercase; letter-spacing: 2px; }
+        
+        .btn-update { background: var(--orange-road); color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; margin-top: 10px; font-weight: bold; font-size: 1em; }
+        .btn-update:hover { background: #e67e22; }
+        
+        /* Animation de chargement */
+        .loading { opacity: 0.5; cursor: not-allowed; animation: pulse 1s infinite; }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(0.98); }
+            100% { transform: scale(1); }
+        }
+
+        /* Styles spécifiques au générateur de CV */
+        .nav-link { display: inline-block; margin-bottom: 20px; color: var(--dark-grey); text-decoration: none; font-weight: bold; }
+        .nav-link:hover { color: var(--orange-road); }
+        
+        .input-area { background: #f8f9fa; padding: 20px; border-radius: 10px; border: 1px solid #ddd; margin-bottom: 20px; }
+        textarea { width: 100%; height: 120px; padding: 15px; border-radius: 8px; border: 1px solid #ccc; font-family: inherit; font-size: 1em; resize: vertical; box-sizing: border-box; margin-top: 10px; }
+        textarea:focus { outline: none; border-color: var(--orange-road); }
+
+        .controls { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+        select { padding: 10px; border-radius: 5px; border: 1px solid #ccc; font-size: 1em; outline: none; }
+
+        #cvPreviewArea { margin-top: 30px; border: 1px dashed #ccc; padding: 20px; border-radius: 5px; background: #e9ecef; display: none; }
+        
+        /* =========================================
+           TEMPLATES DE CV (Ce qui sera imprimé)
+           ========================================= */
+        #cvContent { background: white; } /* Fond blanc forcé pour le PDF */
+
+        /* 1. Template Robuste (Transport/Logistique) */
+        .template-robuste { font-family: 'Arial', sans-serif; color: #333; padding: 40px; }
+        .template-robuste h1 { color: #f39c12; border-bottom: 4px solid #f39c12; padding-bottom: 10px; text-transform: uppercase; text-align: left; margin-top: 0; }
+        .template-robuste h2 { background: #2c3e50; color: white; padding: 8px 15px; margin-top: 30px; font-size: 1.2em; text-transform: uppercase; }
+        .template-robuste .exp-item { margin-bottom: 20px; border-left: 4px solid #f39c12; padding-left: 15px; }
+        .template-robuste .exp-title { font-weight: bold; font-size: 1.1em; color: #2c3e50; }
+        .template-robuste .exp-meta { color: #7f8c8d; font-style: italic; margin-bottom: 5px; }
+        .template-robuste .skills-list { line-height: 1.8; font-weight: bold; color: #2c3e50; }
+
+        /* 2. Template Moderne (Épuré) */
+        .template-moderne { font-family: 'Helvetica Neue', Helvetica, sans-serif; color: #444; padding: 40px; }
+        .template-moderne h1 { color: #2980b9; font-weight: 300; letter-spacing: 3px; text-align: center; margin-bottom: 5px; }
+        .template-moderne .profile-title { text-align: center; font-size: 1.2em; color: #7f8c8d; margin-bottom: 30px; }
+        .template-moderne h2 { color: #2980b9; border-bottom: 1px solid #bdc3c7; padding-bottom: 5px; margin-top: 30px; }
+        .template-moderne .skills { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 15px; }
+        .template-moderne .skill-badge { background: #ecf0f1; color: #2c3e50; padding: 8px 15px; border-radius: 20px; font-size: 0.9em; border: 1px solid #bdc3c7; }
+        .template-moderne .exp-item { margin-bottom: 25px; }
+        .template-moderne .exp-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 5px; }
+        .template-moderne .exp-title { font-weight: bold; color: #2c3e50; }
+
+        /* 3. Template CVNU (Inspiré de ton CORE_SYSTEM) */
+        .template-cvnu { font-family: 'Courier New', Courier, monospace; color: #2c3e50; padding: 40px; background: #fafafa; }
+        .template-cvnu h1 { text-align: left; color: #2c3e50; }
+        .template-cvnu h2 { border-top: 1px dashed #2c3e50; border-bottom: 1px dashed #2c3e50; padding: 5px 0; text-transform: uppercase; }
+        .template-cvnu .exp-item { margin-bottom: 20px; }
+        .template-cvnu .exp-title { font-weight: bold; }
+        .template-cvnu .ascii-border { padding: 10px; border: 2px solid #2c3e50; margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <a href="index.html" class="nav-link">← Retour au Tableau de bord</a>
+    
+    <h1>📝 Générateur de CV (CVNU)</h1>
+    <p style="text-align: center; font-weight: bold; color: #7f8c8d;">L'IA transforme tes mots en un actif professionnel prêt à imprimer.</p>
+
+    <div class="input-area">
+        <label for="storyInput" style="font-weight: bold; color: var(--dark-grey);">🎙️ Raconte tes expériences (Même en vrac, l'IA s'occupe de la mise en page) :</label>
+        <textarea id="storyInput" placeholder="Ex: J'ai le permis B, j'ai bossé 3 ans dans le bâtiment à porter des charges lourdes pour Eiffage, puis j'ai fait 2 saisons de vendanges dans le sud. Je suis courageux et ponctuel..."></textarea>
+        
+        <div class="controls">
+            <select id="templateSelect">
+                <option value="template-robuste">Style : Terrain & Logistique (Robuste)</option>
+                <option value="template-moderne">Style : Moderne & Épuré</option>
+                <option value="template-cvnu">Style : Protocole CVNU (Terminal)</option>
+            </select>
+            
+            <button class="btn-update" id="btnGenerateCV">Générer mon CV</button>
+            <button class="btn-update" id="btnExportPDF" style="display: none; background: #27ae60; border: 1px solid #2ecc71;">📥 Télécharger en PDF</button>
+        </div>
+    </div>
+
+    <div id="cvPreviewArea">
+        <h3 style="margin-top: 0; color: #7f8c8d; text-align: center;">Aperçu du document</h3>
+        <div id="cvContent"></div>
+    </div>
+</div>
+
+<script>
+    document.getElementById('btnGenerateCV').addEventListener('click', async () => {
+        const story = document.getElementById('storyInput').value.trim();
+        const btn = document.getElementById('btnGenerateCV');
+        const previewArea = document.getElementById('cvPreviewArea');
+        const contentArea = document.getElementById('cvContent');
+        const exportBtn = document.getElementById('btnExportPDF');
+        const templateClass = document.getElementById('templateSelect').value;
+        
+        if(!story) {
+            alert("Il faut d'abord raconter tes expériences dans le champ texte !");
+            return;
+        }
+        
+        btn.classList.add('loading');
+        btn.innerText = "Structuration par l'IA en cours...";
+        btn.disabled = true;
+
+        try {
+            // 1. Appel à ton API Express (server.js)
+            const response = await fetch('/api/generate-cv', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userStory: story })
+            });
+
+            if (!response.ok) throw new Error("Erreur serveur");
+            
+            // On s'attend à recevoir le JSON formaté par l'IA
+            const cvData = await response.json();
+
+            // 2. Construction du HTML selon le template choisi
+            let htmlString = "";
+
+            if (templateClass === 'template-robuste') {
+                htmlString = `
+                    <div class="${templateClass}">
+                        <h1>SÉBASTIEN</h1>
+                        <p style="font-size: 1.3em; font-weight: bold; color: #2c3e50;">${cvData.titreProfile}</p>
+                        <p style="line-height: 1.6;"><em>${cvData.resume}</em></p>
+                        
+                        <h2>COMPÉTENCES CLÉS</h2>
+                        <ul class="skills-list">
+                            ${cvData.competences.map(c => `<li>${c}</li>`).join('')}
+                        </ul>
+
+                        <h2>EXPÉRIENCES PROFESSIONNELLES</h2>
+                        ${cvData.experiences.map(exp => `
+                            <div class="exp-item">
+                                <div class="exp-title">${exp.poste}</div>
+                                <div class="exp-meta">${exp.entreprise} | ⏱️ ${exp.duree}</div>
+                                <p style="margin-top: 5px;">${exp.description}</p>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            } 
+            else if (templateClass === 'template-moderne') {
+                htmlString = `
+                    <div class="${templateClass}">
+                        <h1>SÉBASTIEN</h1>
+                        <div class="profile-title">${cvData.titreProfile}</div>
+                        <p style="text-align: center; max-width: 80%; margin: 0 auto; line-height: 1.6;">${cvData.resume}</p>
+                        
+                        <h2>COMPÉTENCES</h2>
+                        <div class="skills">
+                            ${cvData.competences.map(c => `<span class="skill-badge">${c}</span>`).join('')}
+                        </div>
+
+                        <h2>EXPÉRIENCES</h2>
+                        ${cvData.experiences.map(exp => `
+                            <div class="exp-item">
+                                <div class="exp-header">
+                                    <span class="exp-title">${exp.poste} — ${exp.entreprise}</span>
+                                    <span style="color: #7f8c8d; font-size: 0.9em;">${exp.duree}</span>
+                                </div>
+                                <p style="margin-top: 5px; line-height: 1.5;">${exp.description}</p>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            }
+            else if (templateClass === 'template-cvnu') {
+                htmlString = `
+                    <div class="${templateClass}">
+                        <div class="ascii-border">
+                            <h1>[📜] PROFIL : SÉBASTIEN</h1>
+                            <p>> ROLE : ${cvData.titreProfile.toUpperCase()}</p>
+                            <p>> STATUS : READY_FOR_DEPLOYMENT</p>
+                        </div>
+                        <p>> SUMMARY : ${cvData.resume}</p>
+                        
+                        <h2>[ SYSTEM.SKILLS ]</h2>
+                        <ul style="list-style-type: square;">
+                            ${cvData.competences.map(c => `<li>${c}</li>`).join('')}
+                        </ul>
+
+                        <h2>[ SYSTEM.HISTORY_LOGS ]</h2>
+                        ${cvData.experiences.map(exp => `
+                            <div class="exp-item">
+                                <div class="exp-title">=> ${exp.poste.toUpperCase()} @ ${exp.entreprise.toUpperCase()}</div>
+                                <div style="color: #555;">[TIME_SERIES: ${exp.duree}]</div>
+                                <p>> ${exp.description}</p>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            }
+
+            // 3. Injection et affichage
+            contentArea.innerHTML = htmlString;
+            previewArea.style.display = 'block';
+            exportBtn.style.display = 'inline-block';
+
+        } catch (error) {
+            console.error(error);
+            alert("Erreur lors de la communication avec l'IA. Vérifie que le serveur tourne sur le port 2027.");
+        } finally {
+            btn.classList.remove('loading');
+            btn.innerText = "Générer mon CV";
+            btn.disabled = false;
+        }
+    });
+
+    // 4. Logique d'export PDF
+    document.getElementById('btnExportPDF').addEventListener('click', () => {
+        const element = document.getElementById('cvContent');
+        const btn = document.getElementById('btnExportPDF');
+        
+        btn.innerText = "Génération du PDF...";
+        
+        // Options pour html2pdf
+        const opt = {
+            margin:       10, // Marge de 10mm
+            filename:     'CV_Sebastien.pdf',
+            image:        { type: 'jpeg', quality: 0.98 },
+            html2canvas:  { scale: 2, useCORS: true }, // Bonne résolution
+            jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        };
+
+        // Lancement de la création du PDF
+        html2pdf().set(opt).from(element).save().then(() => {
+            btn.innerText = "📥 Télécharger en PDF";
+        });
+    });
+</script>
+
+</body>
+</html>

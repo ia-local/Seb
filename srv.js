@@ -26,7 +26,37 @@ app.post('/api/mission', (req, res) => {
 app.get('/api/state', (req, res) => {
     res.json(dataManager.getDashboardState());
 });
+// Ajoute cette route dans srv.js
+app.post('/api/generate-cv', async (req, res) => {
+    try {
+        const { userStory } = req.body;
+        
+        const completion = await groq.chat.completions.create({
+            messages: [
+                { 
+                    role: "system", 
+                    content: `Tu es un expert RH et un architecte de données CVNU (CV numerique universel). L'utilisateur va te raconter son parcours de manière informelle. 
+                    Ta mission est d'extraire ses expériences et compétences et de renvoyer UNIQUEMENT un objet JSON valide avec cette structure exacte :
+                    {
+                        "titreProfile": "Titre professionnel accrocheur",
+                        "resume": "Un résumé percutant de 3 lignes",
+                        "competences": ["Compétence 1", "Compétence 2", "Compétence 3"],
+                        "experiences": [
+                            { "poste": "...", "entreprise": "...", "duree": "...", "description": "..." }
+                        ]
+                    }` 
+                },
+                { role: "user", content: userStory }
+            ],
+            model: "llama-3.1-8b-instant",
+            response_format: { type: "json_object" } // Force le format JSON
+        });
 
+        res.json(JSON.parse(completion.choices[0].message.content));
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
 app.post('/api/conseil', async (req, res) => {
     try {
         const completion = await groq.chat.completions.create({
