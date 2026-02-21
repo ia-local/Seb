@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sébastien - Stratégie & Financement</title>
+    <style>
+        :root {
+            --orange-road: #f39c12;
+            --dark-grey: #2c3e50;
+            --bg-color: #ecf0f1;
+            --cvnu-blue: #2980b9;
+            --cvnu-green: #27ae60;
+        }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg-color); color: var(--dark-grey); margin: 0; padding: 20px; }
+        .container { max-width: 900px; margin: auto; background: white; padding: 30px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+        h1 { text-align: center; color: var(--orange-road); text-transform: uppercase; letter-spacing: 2px; }
+        
+        .nav-link { display: inline-block; margin-bottom: 20px; color: var(--dark-grey); text-decoration: none; font-weight: bold; }
+        .nav-link:hover { color: var(--orange-road); }
+
+        /* Grille de stratégie */
+        .strategy-grid { display: grid; grid-template-columns: 1.5fr 1fr; gap: 20px; margin-top: 20px; }
+        
+        /* Panneau de simulation */
+        .simulation-panel { background: #f8f9fa; padding: 20px; border-radius: 10px; border: 1px solid #ddd; }
+        .simulation-panel h3 { margin-top: 0; color: var(--dark-grey); border-bottom: 2px solid var(--orange-road); padding-bottom: 10px; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; font-weight: bold; margin-bottom: 5px; }
+        .form-group select, .form-group input { width: 100%; padding: 10px; border-radius: 5px; border: 1px solid #ccc; box-sizing: border-box; font-size: 1em; }
+        
+        .btn-update { background: var(--orange-road); color: white; border: none; padding: 12px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; width: 100%; font-size: 1em; transition: background 0.3s; }
+        .btn-update:hover { background: #e67e22; }
+
+        /* Bilan Smart Contract */
+        .smart-contract-panel { background: var(--dark-grey); color: white; padding: 20px; border-radius: 10px; font-family: 'Courier New', Courier, monospace; }
+        .smart-contract-panel h3 { color: var(--cvnu-green); margin-top: 0; text-transform: uppercase; border-bottom: 1px dashed var(--cvnu-green); padding-bottom: 10px; }
+        .receipt-line { display: flex; justify-content: space-between; margin-bottom: 10px; }
+        .receipt-total { border-top: 1px dashed #fff; margin-top: 15px; padding-top: 15px; font-weight: bold; color: var(--orange-road); font-size: 1.2em; }
+
+        /* Projection Camion */
+        .projection-panel { grid-column: 1 / -1; background: white; border: 2px solid var(--cvnu-blue); padding: 20px; border-radius: 10px; margin-top: 20px; text-align: center; }
+        .truck-ascii { font-family: monospace; white-space: pre; color: var(--cvnu-blue); font-size: 1.2em; overflow-x: auto;}
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <a href="index.html" class="nav-link">← Retour au Tableau de bord</a>
+    
+    <h1>🗺️ Stratégie : Financement du Camion</h1>
+    <p style="text-align: center; color: #7f8c8d;">Simulateur d'économie circulaire CVNU : Transforme ton travail en liberté.</p>
+
+    <div class="strategy-grid">
+        <div class="simulation-panel">
+            <h3>⚙️ Planifier une mission</h3>
+            <div class="form-group">
+                <label for="missionType">Type de mission (Périmètre)</label>
+                <select id="missionType">
+                    <option value="BTP">Intérim : Manutention / BTP</option>
+                    <option value="AGRI">Saisonnier : Agriculture / Vendanges</option>
+                    <option value="LOG">Logistique : Préparation de commandes</option>
+                    <option value="UPCYCLE">Achat/Revente (Mobilier, PC)</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="missionAmount">Gain brut estimé (en € / UTMi)</label>
+                <input type="number" id="missionAmount" placeholder="Ex: 350" min="1">
+            </div>
+            <button class="btn-update" onclick="simulateTaxes()">Simuler l'impact CVNU</button>
+        </div>
+
+        <div class="smart-contract-panel">
+            <h3>[📜] Smart Contract RUP</h3>
+            <div id="receiptContent">
+                <p style="color: #95a5a6; font-style: italic;">> En attente de simulation de mission...</p>
+            </div>
+        </div>
+
+        <div class="projection-panel">
+            <h3>🚚 Projection d'Acquisition</h3>
+            <div class="truck-ascii">
+      _..-------++._
+  _.-'/ |      _||  \"--._
+.--'` | |      | ||    |  `--.
+|     | |      | ||    |     |
+|     | |      | ||    |     |
+'-----+-+------+-++----+-----'
+   (_)             (_)
+            </div>
+            <p>Si tu maintiens un rythme de <strong id="avgWeek">0 €</strong> net par semaine, tu auras ton camion dans <strong style="color: var(--orange-road); font-size: 1.5em;" id="weeksLeft">--</strong> semaines.</p>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Variables globales du système CVNU
+    const TAX_AI_RATE = 0.068; // 6.8%
+    const GOAL_CAMION = 4500;
+    let currentCagnotte = 675; // À lier dynamiquement avec ton API plus tard
+
+    function simulateTaxes() {
+        const amountInput = document.getElementById('missionAmount').value;
+        const type = document.getElementById('missionType').options[document.getElementById('missionType').selectedIndex].text;
+        
+        if (!amountInput || amountInput <= 0) {
+            alert("Saisis un montant valide.");
+            return;
+        }
+
+        const brut = parseFloat(amountInput);
+        
+        // Logique CVNU : Calcul de la Taxe Circulaire
+        const taxeAI = brut * TAX_AI_RATE;
+        const netCamion = brut - taxeAI;
+
+        // Mise à jour de l'affichage Smart Contract
+        const receiptHtml = `
+            <div class="receipt-line"><span>> MISSION:</span> <span>${type}</span></div>
+            <div class="receipt-line"><span>> BRUT (UTMi):</span> <span>${brut.toFixed(2)} €</span></div>
+            <div class="receipt-line" style="color: var(--orange-road);"><span>> TAXE AI (6.8%):</span> <span>- ${taxeAI.toFixed(2)} €</span></div>
+            <div class="receipt-line" style="font-size: 0.8em; color: #7f8c8d;"><span>  └ Redirigé vers Fonds RUP</span> <span>[L3121-1]</span></div>
+            <div class="receipt-total"><span>NET POUR CAMION:</span> <span>${netCamion.toFixed(2)} €</span></div>
+            <button class="btn-update" style="background: var(--cvnu-green); margin-top: 15px; font-size: 0.9em;" onclick="validerMission(${netCamion})">Valider & Injecter au Kernel</button>
+        `;
+        
+        document.getElementById('receiptContent').innerHTML = receiptHtml;
+
+        // Mise à jour de la projection (Hypothèse : il fait ça 1 fois par semaine)
+        const weeks = Math.ceil((GOAL_CAMION - currentCagnotte) / netCamion);
+        document.getElementById('avgWeek').innerText = netCamion.toFixed(2) + " €";
+        document.getElementById('weeksLeft').innerText = weeks > 0 ? weeks : "0 (Atteint !)";
+    }
+
+    function validerMission(netAmount) {
+        // C'est ici que tu appelleras ton fetch('/api/mission', ...) vers dataManager.js
+        alert(`Succès ! ${netAmount.toFixed(2)} € ont été ajoutés à la cagnotte du camion et la Taxe AI a été versée au contrat RUP.`);
+        // Redirection vers le dashboard principal pour voir la jauge monter
+        window.location.href = "index.html";
+    }
+</script>
+
+</body>
+</html>

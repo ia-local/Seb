@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sébastien - Stratégie Fiscale Circulaire</title>
+    <style>
+        :root {
+            --orange-road: #f39c12;
+            --dark-grey: #2c3e50;
+            --bg-color: #ecf0f1;
+            --tva-color: #3498db;
+            --tfp-color: #2ecc71;
+            --ttf-color: #9b59b6;
+        }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg-color); color: var(--dark-grey); margin: 0; padding: 20px; }
+        .container { max-width: 800px; margin: auto; background: white; padding: 30px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+        h1 { text-align: center; color: var(--orange-road); text-transform: uppercase; letter-spacing: 2px; }
+        
+        .nav-link { display: inline-block; margin-bottom: 20px; color: var(--dark-grey); text-decoration: none; font-weight: bold; }
+        .nav-link:hover { color: var(--orange-road); }
+
+        .form-grid { display: grid; grid-template-columns: 1fr; gap: 15px; background: #f8f9fa; padding: 20px; border-radius: 10px; border: 1px solid #ddd; }
+        .input-group { display: flex; flex-direction: column; }
+        .input-group label { font-weight: bold; margin-bottom: 5px; }
+        .input-group input, .input-group select { padding: 10px; border-radius: 5px; border: 1px solid #ccc; font-size: 1em; }
+
+        .btn-update { background: var(--orange-road); color: white; border: none; padding: 12px 20px; border-radius: 5px; cursor: pointer; margin-top: 15px; font-weight: bold; font-size: 1em; width: 100%; }
+        .btn-update:hover { background: #e67e22; }
+
+        .dashboard-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-top: 30px; }
+        .card { padding: 20px; border-radius: 10px; color: white; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .card.tfp { background: var(--tfp-color); }
+        .card.tva { background: var(--tva-color); }
+        .card.ttf { background: var(--ttf-color); }
+        .card h3 { margin: 0 0 10px 0; font-size: 1.1em; border-bottom: 1px solid rgba(255,255,255,0.3); padding-bottom: 5px; }
+        .card .amount { font-size: 1.8em; font-weight: bold; }
+        .card .desc { font-size: 0.8em; margin-top: 5px; opacity: 0.9; }
+
+        .global-impact { margin-top: 30px; padding: 20px; background: var(--dark-grey); color: white; border-radius: 10px; text-align: center; }
+        .global-impact .highlight { color: var(--orange-road); font-size: 2em; font-weight: bold; display: block; margin: 10px 0; }
+
+        .formula { font-family: 'Courier New', Courier, monospace; background: #eee; padding: 15px; border-radius: 5px; margin-top: 20px; text-align: center; color: #555; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <a href="index.html" class="nav-link">← Retour au Tableau de bord</a>
+    
+    <h1>⚙️ Moteur de Taxe Circulaire</h1>
+    <p style="text-align: center; color: #7f8c8d;">Sanctuarisation des gains et modélisation de l'équation RUP.</p>
+
+    <div class="formula">
+        Δ RUP = Σ ( α·TVA + β·TTF + γ·TFP )
+    </div>
+
+    <div class="form-grid">
+        <div class="input-group">
+            <label>💼 Gain Net de la mission (TFP - Force de Travail)</label>
+            <input type="number" id="netIncome" placeholder="Ex: 300 €" value="300">
+        </div>
+        
+        <div class="input-group">
+            <label>🛒 Dépenses Consommation (TVA - Zone Retail)</label>
+            <input type="number" id="consumption" placeholder="Ex: 50 €" value="50">
+        </div>
+
+        <div class="input-group">
+            <label>🏦 Épargne Sécurisée (TTF - Virement bancaire)</label>
+            <input type="number" id="savings" placeholder="Ex: 220 €" value="220">
+        </div>
+
+        <button class="btn-update" onclick="calculateStrategy()">Exécuter l'algorithme /perimeter</button>
+    </div>
+
+    <div class="dashboard-grid" id="resultsGrid" style="display: none;">
+        <div class="card tfp">
+            <h3>TFP (10%)</h3>
+            <div class="amount" id="tfpAmount">0.00 €</div>
+            <div class="desc">Taxe Force Production<br>Direct vers Fonds Camion</div>
+        </div>
+        <div class="card tva">
+            <h3>TVA (5.5%)</h3>
+            <div class="amount" id="tvaAmount">0.00 €</div>
+            <div class="desc">Taxe Valeur Ajoutée<br>Converti en Points CVNU</div>
+        </div>
+        <div class="card ttf">
+            <h3>TTF (+0.3%)</h3>
+            <div class="amount" id="ttfAmount">0.00 €</div>
+            <div class="desc">Taxe Transaction<br>Bonus d'épargne sanctuarisée</div>
+        </div>
+    </div>
+
+    <div class="global-impact" id="globalImpact" style="display: none;">
+        <h3>IMPACT SUR L'OBJECTIF CAMION</h3>
+        <span class="highlight" id="totalInjection">+ 0.00 €</span>
+        <p>injectés dans le capital inaltérable grâce à cette optimisation.</p>
+        <p style="font-size: 0.9em; color: #bdc3c7;">(Le reste finance la vie quotidienne tout en générant de la donnée CVNU)</p>
+    </div>
+</div>
+
+<script>
+    function calculateStrategy() {
+        // 1. Récupération des inputs
+        const netIncome = parseFloat(document.getElementById('netIncome').value) || 0;
+        const consumption = parseFloat(document.getElementById('consumption').value) || 0;
+        const savings = parseFloat(document.getElementById('savings').value) || 0;
+
+        // 2. Application de l'équation RUP
+        // γ·TFP : 10% de la paie isolée pour le camion
+        const tfp = netIncome * 0.10; 
+        
+        // α·TVA : 5.5% sur la consommation (Retail)
+        const tva = consumption * 0.055; 
+        
+        // β·TTF : 0.3% de micro-récompense sur l'épargne
+        const ttf = savings * 0.003; 
+
+        // 3. Calcul de l'injection totale dans le projet
+        const totalInjection = tfp + ttf;
+
+        // 4. Mise à jour de l'interface
+        document.getElementById('tfpAmount').innerText = tfp.toFixed(2) + ' €';
+        document.getElementById('tvaAmount').innerText = tva.toFixed(2) + ' Pts';
+        document.getElementById('ttfAmount').innerText = '+' + ttf.toFixed(2) + ' €';
+        
+        document.getElementById('totalInjection').innerText = '+ ' + totalInjection.toFixed(2) + ' €';
+
+        // 5. Affichage des blocs avec un petit effet
+        document.getElementById('resultsGrid').style.display = 'grid';
+        document.getElementById('globalImpact').style.display = 'block';
+
+        // 6. Optionnel : Envoi au serveur Express pour sauvegarde dans le JSON
+        /*
+        fetch('/api/perimeter/sync', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ tfp, tva, ttf, netIncome })
+        });
+        */
+    }
+</script>
+
+</body>
+</html>

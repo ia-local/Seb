@@ -12,17 +12,11 @@
         }
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg-color); color: var(--dark-grey); margin: 0; padding: 20px; }
         .container { max-width: 800px; margin: auto; background: white; padding: 30px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
-        h1 { text-align: center; color: var(--orange-road); text-transform: uppercase; letter-spacing: 2px; margin-bottom: 10px; }
+        h1 { text-align: center; color: var(--orange-road); text-transform: uppercase; letter-spacing: 2px; }
         
-        /* Menu de Navigation */
-        .nav-menu { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 2px dashed #ddd; }
-        .nav-menu a { background: var(--dark-grey); color: white; text-decoration: none; padding: 10px 15px; border-radius: 5px; font-weight: bold; font-size: 0.9em; transition: background 0.3s, transform 0.1s; }
-        .nav-menu a:hover { background: var(--orange-road); transform: translateY(-2px); }
-        .nav-menu a.active { background: var(--orange-road); box-shadow: 0 4px 6px rgba(243, 156, 18, 0.3); }
-
         /* Jauge */
         .progress-container { background: #ddd; border-radius: 20px; height: 40px; width: 100%; margin: 20px 0; overflow: hidden; border: 2px solid var(--dark-grey); }
-        .progress-bar { background: var(--orange-road); height: 100%; width: 1%; transition: width 0.5s ease-in-out; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; }
+        .progress-bar { background: var(--orange-road); height: 100%; width: 15%; transition: width 0.5s ease-in-out; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; }
 
         .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px; }
         .stat-card { background: var(--dark-grey); color: white; padding: 20px; border-radius: 10px; text-align: center; }
@@ -33,14 +27,17 @@
         
         .btn-update { background: var(--orange-road); color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; margin-top: 10px; font-weight: bold; }
         .btn-update:hover { background: #e67e22; }
-        
-        /* Effet visuel pour le bouton quand il charge */
-        .loading { opacity: 0.5; cursor: not-allowed; animation: pulse 1s infinite; }
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(0.98); }
-            100% { transform: scale(1); }
-        }
+        /* Ajoute ce petit effet visuel pour le bouton quand il charge */
+    .loading {
+        opacity: 0.5;
+        cursor: not-allowed;
+        animation: pulse 1s infinite;
+    }
+    @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(0.98); }
+        100% { transform: scale(1); }
+    }
     </style>
 </head>
 <body>
@@ -48,26 +45,19 @@
 <div class="container">
     <h1>🚚 Objectif : Camion Liberté</h1>
 
-    <div class="nav-menu">
-        <a href="index.html" class="active">📊 Hub Central</a>
-        <a href="identite-souveraine.html">🛂 Identité Souveraine</a>
-        <a href="cv-builder.html">📝 Générateur CVNU</a>
-        <a href="strategie-fiscale.html">⚙️ Stratégie Fiscale</a>
-    </div>
-
     <div class="progress-container">
-        <div class="progress-bar" id="progressBar">0%</div>
+        <div class="progress-bar" id="progressBar">1%</div>
     </div>
     <p style="text-align: center; font-weight: bold;">Objectif : 4 500 € (Achat + Assurance)</p>
 
     <div class="stats">
         <div class="stat-card">
             <p>Cagnotte actuelle</p>
-            <span id="currentCash">0 €</span>
+            <span id="currentCash">1 €</span>
         </div>
         <div class="stat-card">
             <p>Reste à gagner</p>
-            <span id="remaining">4500 €</span>
+            <span id="remaining">4999 €</span>
         </div>
     </div>
 
@@ -83,6 +73,7 @@
     <button class="btn-update" onclick="updateCash()">Valider la mission</button>
 </div>
 
+
 <script>
     document.getElementById('btnAgi').addEventListener('click', async () => {
         const btn = document.getElementById('btnAgi');
@@ -93,7 +84,6 @@
         display.innerText = "L'IA analyse les opportunités...";
         
         try {
-            // Note: s'assure que le serveur Express tourne sur localhost:2027
             const response = await fetch('/api/conseil', { 
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' }
@@ -110,13 +100,7 @@
 </script>
 <script>
     let totalGoal = 4500;
-    // Initialisation dynamique pour correspondre à ton "1 €" de test
-    let currentCash = 1; 
-
-    // Appelé au chargement de la page pour initialiser l'affichage correctement
-    window.onload = function() {
-        render();
-    };
+    let currentCash = 1;
 
     function updateCash() {
         let input = document.getElementById('cashInput');
@@ -130,9 +114,6 @@
 
     function render() {
         let percent = (currentCash / totalGoal) * 100;
-        // On s'assure que la barre ne dépasse pas 100% visuellement
-        if (percent > 100) percent = 100; 
-        
         document.getElementById('progressBar').style.width = percent + '%';
         document.getElementById('progressBar').innerText = Math.round(percent) + '%';
         document.getElementById('currentCash').innerText = currentCash + ' €';

@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sébastien - Identité Souveraine CVNU</title>
+    <style>
+        :root {
+            --orange-road: #f39c12;
+            --dark-grey: #2c3e50;
+            --bg-color: #ecf0f1;
+            --system-green: #2ecc71;
+        }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg-color); color: var(--dark-grey); margin: 0; padding: 20px; }
+        .container { max-width: 800px; margin: auto; background: white; padding: 30px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+        h1 { text-align: center; color: var(--orange-road); text-transform: uppercase; letter-spacing: 2px; }
+        
+        .nav-link { display: inline-block; margin-bottom: 20px; color: var(--dark-grey); text-decoration: none; font-weight: bold; }
+        .nav-link:hover { color: var(--orange-road); }
+
+        /* Formulaire d'onboarding */
+        .onboarding-form { background: #f8f9fa; padding: 20px; border-radius: 10px; border: 1px solid #ddd; }
+        .input-group { margin-bottom: 15px; }
+        .input-group label { display: block; font-weight: bold; margin-bottom: 5px; color: var(--dark-grey); }
+        .input-group input { width: 100%; padding: 10px; border-radius: 5px; border: 1px solid #ccc; font-size: 1em; box-sizing: border-box; }
+        
+        .btn-system { background: var(--dark-grey); color: white; border: none; padding: 12px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; width: 100%; text-transform: uppercase; letter-spacing: 1px; transition: background 0.3s; }
+        .btn-system:hover { background: #1a252f; }
+        .btn-system.active { background: var(--orange-road); }
+
+        /* Carte d'identité CVNU (Style Passeport Numérique) */
+        .id-card-container { display: none; margin-top: 30px; perspective: 1000px; }
+        .id-card { background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%); color: white; padding: 25px; border-radius: 15px; box-shadow: 0 15px 35px rgba(0,0,0,0.2); position: relative; overflow: hidden; border: 2px solid #bdc3c7; }
+        
+        /* Filigrane de sécurité */
+        .id-card::before { content: 'CVNU VALIDATED'; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-30deg); font-size: 4em; color: rgba(255,255,255,0.03); white-space: nowrap; pointer-events: none; }
+        
+        .id-header { display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.2); padding-bottom: 15px; margin-bottom: 20px; }
+        .id-title { font-size: 1.2em; font-weight: bold; color: var(--orange-road); letter-spacing: 1px; }
+        .id-hash { font-family: 'Courier New', Courier, monospace; font-size: 0.8em; color: var(--system-green); }
+
+        .id-body { display: flex; gap: 20px; }
+        .id-avatar { width: 100px; height: 100px; background: #ecf0f1; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 3em; border: 2px solid var(--orange-road); }
+        .id-details { flex-grow: 1; }
+        .id-field { margin-bottom: 10px; }
+        .id-label { font-size: 0.7em; text-transform: uppercase; color: #bdc3c7; letter-spacing: 1px; }
+        .id-value { font-size: 1.2em; font-weight: bold; text-transform: uppercase; }
+
+        .id-stats { display: flex; justify-content: space-between; margin-top: 20px; background: rgba(0,0,0,0.2); padding: 15px; border-radius: 8px; }
+        .stat-box { text-align: center; }
+        .stat-value { font-size: 1.5em; font-weight: bold; color: var(--orange-road); }
+
+        /* Terminal Logs pour l'immersion */
+        .terminal-logs { background: #000; color: #0f0; font-family: 'Courier New', monospace; padding: 15px; border-radius: 5px; margin-top: 20px; height: 100px; overflow-y: auto; font-size: 0.8em; display: none; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <a href="index.html" class="nav-link">← Retour au Tableau de bord</a>
+    
+    <h1>🛂 Initialisation Citoyen CVNU</h1>
+    <p style="text-align: center; color: #7f8c8d;">Enregistrement dans le KERNEL et création de l'actif souverain.</p>
+
+    <div class="onboarding-form" id="onboardingForm">
+        <h3>[ ÉTAPE 1 ] : Données d'Identification</h3>
+        <div class="input-group">
+            <label>Prénom</label>
+            <input type="text" id="firstName" value="Sébastien">
+        </div>
+        <div class="input-group">
+            <label>Nom de code / Projet</label>
+            <input type="text" id="lastName" value="Mission Camion">
+        </div>
+        <div class="input-group">
+            <label>Objectif Financier (UTMi)</label>
+            <input type="number" id="targetPoints" value="4500">
+        </div>
+        
+        <button class="btn-system" id="btnSync" onclick="startSync()">Générer l'Identité Souveraine</button>
+    </div>
+
+    <div class="terminal-logs" id="terminalLogs"></div>
+
+    <div class="id-card-container" id="idCardContainer">
+        <div class="id-card">
+            <div class="id-header">
+                <div class="id-title">CITOYEN SOUVERAIN // CVNU</div>
+                <div class="id-hash" id="walletHash">0x000...000</div>
+            </div>
+            <div class="id-body">
+                <div class="id-avatar">🚚</div>
+                <div class="id-details">
+                    <div class="id-field">
+                        <div class="id-label">Citoyen</div>
+                        <div class="id-value" id="cardName">SÉBASTIEN</div>
+                    </div>
+                    <div class="id-field">
+                        <div class="id-label">Statut</div>
+                        <div class="id-value" style="color: var(--system-green);">ACTIF - EN RÉINSERTION</div>
+                    </div>
+                    <div class="id-field">
+                        <div class="id-label">Date d'émission</div>
+                        <div class="id-value" id="cardDate">--/--/----</div>
+                    </div>
+                </div>
+            </div>
+            <div class="id-stats">
+                <div class="stat-box">
+                    <div class="id-label">LEVEL (Score Cognitif)</div>
+                    <div class="stat-value">01</div>
+                </div>
+                <div class="stat-box">
+                    <div class="id-label">TRUST SCORE</div>
+                    <div class="stat-value">0.80</div>
+                </div>
+                <div class="stat-box">
+                    <div class="id-label">TARGET (UTMi)</div>
+                    <div class="stat-value" id="cardTarget">4500</div>
+                </div>
+            </div>
+        </div>
+        
+        <p style="text-align: center; margin-top: 15px; font-weight: bold; color: var(--system-green);">
+            ✓ Profil enregistré dans le KERNEL local. Prêt pour les missions.
+        </p>
+    </div>
+</div>
+
+<script>
+    function sleep(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
+
+    async function startSync() {
+        const btn = document.getElementById('btnSync');
+        const logs = document.getElementById('terminalLogs');
+        const form = document.getElementById('onboardingForm');
+        
+        btn.disabled = true;
+        btn.innerText = "Synchronisation KERNEL...";
+        logs.style.display = 'block';
+
+        // Simulation de l'initialisation du CORE_SYSTEM_CVNU.js
+        const logMessages = [
+            "> INITIALISATION CVNU_SYSTEM...",
+            "> CHARGEMENT DU KERNEL [MODE: ANSI]...",
+            "> LECTURE DES DONNÉES UTILISATEUR...",
+            "> CALCUL DU SCORE COGNITIF INITIAL...",
+            "> LEVEL ATTRIBUÉ : Math.max(1, Math.floor(Score / 500)) = LEVEL 01",
+            "> GÉNÉRATION DU HASH DE SÉCURITÉ...",
+            "> VALIDATION DE L'IDENTITÉ SOUVERAINE : OK."
+        ];
+
+        logs.innerHTML = "";
+        for (let msg of logMessages) {
+            logs.innerHTML += msg + "<br>";
+            logs.scrollTop = logs.scrollHeight;
+            await sleep(600);
+        }
+
+        // Mise à jour de la carte
+        document.getElementById('cardName').innerText = document.getElementById('firstName').value + " " + document.getElementById('lastName').value;
+        document.getElementById('cardTarget').innerText = document.getElementById('targetPoints').value;
+        
+        const today = new Date();
+        document.getElementById('cardDate').innerText = today.toLocaleDateString('fr-FR');
+        
+        // Génération d'un pseudo-hash (simulant le wallet)
+        const randomHash = "0x" + Math.random().toString(16).substr(2, 10).toUpperCase() + "..." + Math.random().toString(16).substr(2, 4).toUpperCase();
+        document.getElementById('walletHash').innerText = randomHash;
+
+        // Affichage de la carte
+        await sleep(500);
+        form.style.display = 'none';
+        logs.style.display = 'none';
+        document.getElementById('idCardContainer').style.display = 'block';
+    }
+</script>
+
+</body>
+</html>
