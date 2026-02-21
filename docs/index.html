@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sébastien - Objectif Camion</title>
+    <style>
+        :root {
+            --orange-road: #f39c12;
+            --dark-grey: #2c3e50;
+            --bg-color: #ecf0f1;
+        }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg-color); color: var(--dark-grey); margin: 0; padding: 20px; }
+        .container { max-width: 800px; margin: auto; background: white; padding: 30px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+        h1 { text-align: center; color: var(--orange-road); text-transform: uppercase; letter-spacing: 2px; }
+        
+        /* Jauge */
+        .progress-container { background: #ddd; border-radius: 20px; height: 40px; width: 100%; margin: 20px 0; overflow: hidden; border: 2px solid var(--dark-grey); }
+        .progress-bar { background: var(--orange-road); height: 100%; width: 15%; transition: width 0.5s ease-in-out; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; }
+
+        .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px; }
+        .stat-card { background: var(--dark-grey); color: white; padding: 20px; border-radius: 10px; text-align: center; }
+        .stat-card span { display: block; font-size: 2em; color: var(--orange-road); font-weight: bold; }
+
+        .ai-advice { background: #fff3cd; border-left: 5px solid #ffeeba; padding: 20px; margin-top: 30px; border-radius: 5px; font-style: italic; }
+        .ai-header { font-weight: bold; margin-bottom: 10px; display: flex; align-items: center; }
+        
+        .btn-update { background: var(--orange-road); color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; margin-top: 10px; font-weight: bold; }
+        .btn-update:hover { background: #e67e22; }
+        /* Ajoute ce petit effet visuel pour le bouton quand il charge */
+    .loading {
+        opacity: 0.5;
+        cursor: not-allowed;
+        animation: pulse 1s infinite;
+    }
+    @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(0.98); }
+        100% { transform: scale(1); }
+    }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>🚚 Objectif : Camion Liberté</h1>
+
+    <div class="progress-container">
+        <div class="progress-bar" id="progressBar">1%</div>
+    </div>
+    <p style="text-align: center; font-weight: bold;">Objectif : 4 500 € (Achat + Assurance)</p>
+
+    <div class="stats">
+        <div class="stat-card">
+            <p>Cagnotte actuelle</p>
+            <span id="currentCash">1 €</span>
+        </div>
+        <div class="stat-card">
+            <p>Reste à gagner</p>
+            <span id="remaining">4999 €</span>
+        </div>
+    </div>
+
+    <div class="ai-advice">
+        <div class="ai-header">🤖 CONSEILS DE L'AGI :</div>
+        <p id="aiText">Clique sur le bouton pour recevoir tes instructions de mission...</p>
+        <button class="btn-update" id="btnAgi">Générer un conseil</button>
+    </div>
+
+    <hr style="margin: 40px 0;">
+    <h3>Admin : Mettre à jour les gains</h3>
+    <input type="number" id="cashInput" placeholder="Ajouter un montant (€)">
+    <button class="btn-update" onclick="updateCash()">Valider la mission</button>
+</div>
+
+
+<script>
+    document.getElementById('btnAgi').addEventListener('click', async () => {
+        const btn = document.getElementById('btnAgi');
+        const display = document.getElementById('aiText');
+        
+        btn.classList.add('loading');
+        btn.innerText = "Calcul en cours...";
+        display.innerText = "L'IA analyse les opportunités...";
+        
+        try {
+            const response = await fetch('/api/conseil', { 
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            });
+            const data = await response.json();
+            display.innerText = data.advice;
+        } catch (err) {
+            display.innerText = "Erreur de connexion. Vérifie que le serveur tourne sur le port 2027.";
+        } finally {
+            btn.classList.remove('loading');
+            btn.innerText = "Générer un conseil";
+        }
+    });
+</script>
+<script>
+    let totalGoal = 4500;
+    let currentCash = 1;
+
+    function updateCash() {
+        let input = document.getElementById('cashInput');
+        let val = parseFloat(input.value);
+        if(!isNaN(val)) {
+            currentCash += val;
+            render();
+            input.value = '';
+        }
+    }
+
+    function render() {
+        let percent = (currentCash / totalGoal) * 100;
+        document.getElementById('progressBar').style.width = percent + '%';
+        document.getElementById('progressBar').innerText = Math.round(percent) + '%';
+        document.getElementById('currentCash').innerText = currentCash + ' €';
+        document.getElementById('remaining').innerText = (totalGoal - currentCash) + ' €';
+    }
+</script>
+
+</body>
+</html>
